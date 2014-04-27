@@ -83,7 +83,9 @@ public class IndexableListView extends ListView {
 				public boolean onFling(MotionEvent e1, MotionEvent e2,
 						float velocityX, float velocityY) {
 					// If fling happens, index bar shows
-					mScroller.show();
+					if (mIsFastScrollEnabled) {						
+						mScroller.show();
+					}
 					return super.onFling(e1, e2, velocityX, velocityY);
 				}
 				
