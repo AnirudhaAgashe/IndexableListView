@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="IndexableListView">
+        <attr name="text_on" format="reference" />
+        <attr name="autoCenterPointerInSlice" format="boolean" />
+        <attr name="width" format="dimension" />
+        <attr name="background_color" format="reference" />
+        <attr name="text_color" format="color|reference" />
+        <attr name="selected_text_color" format="color|reference" />
+        <attr name="margin" format="dimension" />
+        <attr name="preview_background_color" format="reference" />
+        <attr name="preview_text_color"  format="reference"/>
+        <attr name="preview_padding" format="dimension" />
+    </declare-styleable>
+
+</resources>

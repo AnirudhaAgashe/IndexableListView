@@ -17,6 +17,7 @@
 package com.woozzu.android.widget;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -24,13 +25,16 @@ import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.Adapter;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
 
+import com.woozzu.android.indexablelistview.R;
+
 public class IndexScroller {
-	
+
 	private float mIndexbarWidth;
 	private float mIndexbarMargin;
 	private float mPreviewPadding;
@@ -46,88 +50,166 @@ public class IndexScroller {
 	private SectionIndexer mIndexer = null;
 	private String[] mSections = null;
 	private RectF mIndexbarRect;
-	
+
 	private static final int STATE_HIDDEN = 0;
 	private static final int STATE_SHOWING = 1;
 	private static final int STATE_SHOWN = 2;
 	private static final int STATE_HIDING = 3;
-	
-	public IndexScroller(Context context, ListView lv) {
+
+	// Colors
+	private int mIndexbarTextColor;
+	private int mIndexbarBgColor;
+	private int mIndexbarSelectedTextColor;
+	private int mPreviewTextColor;
+	private int mPreviewBgColor;
+
+
+	public IndexScroller(Context context, ListView lv, AttributeSet attrs,
+			int defStyle) {
+		float width = 20;
+		float margin = 10;
+		float padding = 5;
+		mDensity = context.getResources().getDisplayMetrics().density;
+		TypedArray a = context.obtainStyledAttributes(attrs,
+				R.styleable.IndexableListView);
+		if (a != null) {
+			mIndexbarBgColor = a
+					.getColor(R.styleable.IndexableListView_background_color,
+							Color.BLACK);
+			mIndexbarTextColor = a.getColor(
+					R.styleable.IndexableListView_text_color, Color.WHITE);
+			mIndexbarSelectedTextColor = a.getColor(
+					R.styleable.IndexableListView_selected_text_color,
+					Color.RED);
+			width = a.getDimension(R.styleable.IndexableListView_width, 20);
+			margin = a.getDimension(R.styleable.IndexableListView_margin, 10);
+
+			mPreviewBgColor = a.getColor(
+					R.styleable.IndexableListView_preview_background_color,
+					Color.BLACK);
+			mPreviewTextColor = a.getColor(
+					R.styleable.IndexableListView_preview_text_color,
+					Color.WHITE);
+			padding = a.getDimension(
+					R.styleable.IndexableListView_preview_padding, 5);
+		}
+
+		mIndexbarWidth = width * mDensity;
+		mIndexbarMargin = margin * mDensity;
+		mPreviewPadding = padding * mDensity;
+
+		if (a != null){
+			a.recycle();
+		}
+
 		mDensity = context.getResources().getDisplayMetrics().density;
 		mScaledDensity = context.getResources().getDisplayMetrics().scaledDensity;
 		mListView = lv;
 		setAdapter(mListView.getAdapter());
-		
-		mIndexbarWidth = 20 * mDensity;
-		mIndexbarMargin = 10 * mDensity;
-		mPreviewPadding = 5 * mDensity;
+
 	}
 
 	public void draw(Canvas canvas) {
 		if (mState == STATE_HIDDEN)
 			return;
-		
+
 		// mAlphaRate determines the rate of opacity
 		Paint indexbarPaint = new Paint();
-		indexbarPaint.setColor(Color.BLACK);
+		indexbarPaint.setColor(mIndexbarBgColor);
 		indexbarPaint.setAlpha((int) (64 * mAlphaRate));
 		indexbarPaint.setAntiAlias(true);
-		canvas.drawRoundRect(mIndexbarRect, 5 * mDensity, 5 * mDensity, indexbarPaint);
-		
+		canvas.drawRoundRect(mIndexbarRect, 5 * mDensity, 5 * mDensity,
+				indexbarPaint);
+
 		if (mSections != null && mSections.length > 0) {
 			// Preview is shown when mCurrentSection is set
 			if (mCurrentSection >= 0) {
 				Paint previewPaint = new Paint();
-				previewPaint.setColor(Color.BLACK);
+				previewPaint.setColor(mPreviewBgColor);
 				previewPaint.setAlpha(96);
 				previewPaint.setAntiAlias(true);
 				previewPaint.setShadowLayer(3, 0, 0, Color.argb(64, 0, 0, 0));
-				
+
 				Paint previewTextPaint = new Paint();
-				previewTextPaint.setColor(Color.WHITE);
+				previewTextPaint.setColor(mPreviewTextColor);
 				previewTextPaint.setAntiAlias(true);
 				previewTextPaint.setTextSize(50 * mScaledDensity);
-				
-				float previewTextWidth = previewTextPaint.measureText(mSections[mCurrentSection]);
-				float previewSize = 2 * mPreviewPadding + previewTextPaint.descent() - previewTextPaint.ascent();
-				RectF previewRect = new RectF((mListViewWidth - previewSize) / 2
-						, (mListViewHeight - previewSize) / 2
-						, (mListViewWidth - previewSize) / 2 + previewSize
-						, (mListViewHeight - previewSize) / 2 + previewSize);
-				
-				canvas.drawRoundRect(previewRect, 5 * mDensity, 5 * mDensity, previewPaint);
-				canvas.drawText(mSections[mCurrentSection], previewRect.left + (previewSize - previewTextWidth) / 2 - 1
-						, previewRect.top + mPreviewPadding - previewTextPaint.ascent() + 1, previewTextPaint);
+
+				float previewTextWidth = previewTextPaint
+						.measureText(mSections[mCurrentSection]);
+				float previewSize = 2 * mPreviewPadding
+						+ previewTextPaint.descent()
+						- previewTextPaint.ascent();
+				RectF previewRect = new RectF(
+						(mListViewWidth - previewSize) / 2,
+						(mListViewHeight - previewSize) / 2,
+						(mListViewWidth - previewSize) / 2 + previewSize,
+						(mListViewHeight - previewSize) / 2 + previewSize);
+
+				canvas.drawRoundRect(previewRect, 5 * mDensity, 5 * mDensity,
+						previewPaint);
+				canvas.drawText(
+						mSections[mCurrentSection],
+						previewRect.left + (previewSize - previewTextWidth) / 2
+								- 1,
+						previewRect.top + mPreviewPadding
+								- previewTextPaint.ascent() + 1,
+						previewTextPaint);
 			}
-			
+
 			Paint indexPaint = new Paint();
-			indexPaint.setColor(Color.WHITE);
+			indexPaint.setColor(mIndexbarTextColor);
 			indexPaint.setAlpha((int) (255 * mAlphaRate));
 			indexPaint.setAntiAlias(true);
 			indexPaint.setTextSize(12 * mScaledDensity);
-			
-			float sectionHeight = (mIndexbarRect.height() - 2 * mIndexbarMargin) / mSections.length;
-			float paddingTop = (sectionHeight - (indexPaint.descent() - indexPaint.ascent())) / 2;
+
+			Paint indexSelectedPaint = new Paint();
+			indexSelectedPaint.setColor(mIndexbarSelectedTextColor);
+			indexSelectedPaint.setAlpha((int) (255 * mAlphaRate));
+			indexSelectedPaint.setAntiAlias(true);
+			indexSelectedPaint.setTextSize(12 * mScaledDensity);
+
+			float sectionHeight = (mIndexbarRect.height() - 2 * mIndexbarMargin)
+					/ mSections.length;
+			float paddingTop = (sectionHeight - (indexPaint.descent() - indexPaint
+					.ascent())) / 2;
 			for (int i = 0; i < mSections.length; i++) {
-				float paddingLeft = (mIndexbarWidth - indexPaint.measureText(mSections[i])) / 2;
-				canvas.drawText(mSections[i], mIndexbarRect.left + paddingLeft
-						, mIndexbarRect.top + mIndexbarMargin + sectionHeight * i + paddingTop - indexPaint.ascent(), indexPaint);
+
+				if (i == mCurrentSection) {
+					float paddingLeft = (mIndexbarWidth - indexSelectedPaint
+							.measureText(mSections[i])) / 2;
+					canvas.drawText(mSections[i], mIndexbarRect.left
+							+ paddingLeft, mIndexbarRect.top + mIndexbarMargin
+							+ sectionHeight * i + paddingTop
+							- indexSelectedPaint.ascent(), indexSelectedPaint);
+				} else {
+					float paddingLeft = (mIndexbarWidth - indexPaint
+							.measureText(mSections[i])) / 2;
+					canvas.drawText(mSections[i], mIndexbarRect.left
+							+ paddingLeft,
+							mIndexbarRect.top + mIndexbarMargin + sectionHeight
+									* i + paddingTop - indexPaint.ascent(),
+							indexPaint);
+				}
 			}
 		}
 	}
-	
+
+
 	public boolean onTouchEvent(MotionEvent ev) {
 		switch (ev.getAction()) {
 		case MotionEvent.ACTION_DOWN:
 			// If down event occurs inside index bar region, start indexing
 			if (mState != STATE_HIDDEN && contains(ev.getX(), ev.getY())) {
 				setState(STATE_SHOWN);
-				
+
 				// It demonstrates that the motion event started from index bar
 				mIsIndexing = true;
-				// Determine which section the point is in, and move the list to that section
+				// Determine which section the point is in, and move the list to
+				// that section
 				mCurrentSection = getSectionByPoint(ev.getY());
-				mListView.setSelection(mIndexer.getPositionForSection(mCurrentSection));
+				mListView.setSelection(mIndexer
+						.getPositionForSection(mCurrentSection));
 				return true;
 			}
 			break;
@@ -135,9 +217,11 @@ public class IndexScroller {
 			if (mIsIndexing) {
 				// If this event moves inside index bar
 				if (contains(ev.getX(), ev.getY())) {
-					// Determine which section the point is in, and move the list to that section
+					// Determine which section the point is in, and move the
+					// list to that section
 					mCurrentSection = getSectionByPoint(ev.getY());
-					mListView.setSelection(mIndexer.getPositionForSection(mCurrentSection));
+					mListView.setSelection(mIndexer
+							.getPositionForSection(mCurrentSection));
 				}
 				return true;
 			}
@@ -153,39 +237,112 @@ public class IndexScroller {
 		}
 		return false;
 	}
-	
+
+	/**
+	 * @return the index bar width
+	 */
+	public float getIndexbarWidth() {
+		return mIndexbarWidth;
+	}
+
+	/**
+	 * Sets the index bar width
+	 * @param indexbarWidth in dp
+	 */
+	public void setIndexbarWidth(float indexbarWidth) {
+		this.mIndexbarWidth = indexbarWidth * mDensity;
+	}
+
+	/**
+	 * @return the index bar margin
+	 */
+	public float getIndexbarMargin() {
+		return mIndexbarMargin;
+	}
+
+	/**
+	 * Sets the index bar margin
+	 * @param indexbarMargin in dp
+	 */
+	public void setIndexbarMargin(float indexbarMargin) {
+		this.mIndexbarMargin = indexbarMargin * mDensity;
+	}
+
+	/**
+	 * @return index bar text color
+	 */
+	public int getIndexbarTextColor() {
+		return mIndexbarTextColor;
+	}
+
+	/**
+	 * Sets the index bar text color
+	 * @param indexbarTextColor
+	 */
+	public void setIndexbarTextColor(int indexbarTextColor) {
+		this.mIndexbarTextColor = indexbarTextColor;
+	}
+
+	/**
+	 * @return the index bar background color
+	 */
+	public int getIndexbarBgColor() {
+		return mIndexbarBgColor;
+	}
+
+	/**
+	 * Sets the index bar background color
+	 * @param indexbarBgColor
+	 */
+	public void setIndexbarBgColor(int indexbarBgColor) {
+		this.mIndexbarBgColor = indexbarBgColor;
+	}
+
+	/**
+	 * @return index bar user high lighted text color
+	 */
+	public int getIndexbarSelectedTextColor() {
+		return mIndexbarSelectedTextColor;
+	}
+
+	/**
+	 * Sets the user highlighted text color
+	 * @param indexbarSelectedTextColor
+	 */
+	public void setIndexbarSelectedTextColor(int indexbarSelectedTextColor) {
+		this.mIndexbarSelectedTextColor = indexbarSelectedTextColor;
+	}
+
 	public void onSizeChanged(int w, int h, int oldw, int oldh) {
 		mListViewWidth = w;
 		mListViewHeight = h;
-		mIndexbarRect = new RectF(w - mIndexbarMargin - mIndexbarWidth
-				, mIndexbarMargin
-				, w - mIndexbarMargin
-				, h - mIndexbarMargin);
+		mIndexbarRect = new RectF(w - mIndexbarMargin - mIndexbarWidth,
+				mIndexbarMargin, w - mIndexbarMargin, h - mIndexbarMargin);
 	}
-	
+
 	public void show() {
 		if (mState == STATE_HIDDEN)
 			setState(STATE_SHOWING);
 		else if (mState == STATE_HIDING)
 			setState(STATE_HIDING);
 	}
-	
+
 	public void hide() {
 		if (mState == STATE_SHOWN)
 			setState(STATE_HIDING);
 	}
-	
+
 	public void setAdapter(Adapter adapter) {
 		if (adapter instanceof SectionIndexer) {
 			mIndexer = (SectionIndexer) adapter;
 			mSections = (String[]) mIndexer.getSections();
 		}
 	}
-	
+
 	private void setState(int state) {
 		if (state < STATE_HIDDEN || state > STATE_HIDING)
 			return;
-		
+
 		mState = state;
 		switch (mState) {
 		case STATE_HIDDEN:
@@ -208,12 +365,14 @@ public class IndexScroller {
 			break;
 		}
 	}
-	
+
 	private boolean contains(float x, float y) {
-		// Determine if the point is in index bar region, which includes the right margin of the bar
-		return (x >= mIndexbarRect.left && y >= mIndexbarRect.top && y <= mIndexbarRect.top + mIndexbarRect.height());
+		// Determine if the point is in index bar region, which includes the
+		// right margin of the bar
+		return (x >= mIndexbarRect.left && y >= mIndexbarRect.top && y <= mIndexbarRect.top
+				+ mIndexbarRect.height());
 	}
-	
+
 	private int getSectionByPoint(float y) {
 		if (mSections == null || mSections.length == 0)
 			return 0;
@@ -221,20 +380,21 @@ public class IndexScroller {
 			return 0;
 		if (y >= mIndexbarRect.top + mIndexbarRect.height() - mIndexbarMargin)
 			return mSections.length - 1;
-		return (int) ((y - mIndexbarRect.top - mIndexbarMargin) / ((mIndexbarRect.height() - 2 * mIndexbarMargin) / mSections.length));
+		return (int) ((y - mIndexbarRect.top - mIndexbarMargin) / ((mIndexbarRect
+				.height() - 2 * mIndexbarMargin) / mSections.length));
 	}
-	
+
 	private void fade(long delay) {
 		mHandler.removeMessages(0);
 		mHandler.sendEmptyMessageAtTime(0, SystemClock.uptimeMillis() + delay);
 	}
-	
+
 	private Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
-			
+
 			switch (mState) {
 			case STATE_SHOWING:
 				// Fade in effect
@@ -243,7 +403,7 @@ public class IndexScroller {
 					mAlphaRate = 1;
 					setState(STATE_SHOWN);
 				}
-				
+
 				mListView.invalidate();
 				fade(10);
 				break;
@@ -258,12 +418,12 @@ public class IndexScroller {
 					mAlphaRate = 0;
 					setState(STATE_HIDDEN);
 				}
-				
+
 				mListView.invalidate();
 				fade(10);
 				break;
 			}
 		}
-		
+
 	};
 }
