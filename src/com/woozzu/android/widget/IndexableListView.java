@@ -30,7 +30,6 @@ public class IndexableListView extends ListView {
 	private static final String TAG = IndexableListView.class.getSimpleName();
 
 	private boolean mIsFastScrollEnabled = false;
-	// private AttributeSet mAttrs;
 	private int mDefStyle;
 	private IndexScroller mScroller = null;
 	private GestureDetector mGestureDetector = null;
@@ -43,13 +42,11 @@ public class IndexableListView extends ListView {
 	public IndexableListView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mScroller = new IndexScroller(context, this, attrs, mDefStyle);
-		// mAttrs = attrs;
 	}
 
 	public IndexableListView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		mScroller = new IndexScroller(context, this, attrs, defStyle);
-		// mAttrs = attrs;
 		mDefStyle = defStyle;
 	}
 
@@ -61,22 +58,15 @@ public class IndexableListView extends ListView {
 	@Override
 	public void setFastScrollEnabled(boolean enabled) {
 		mIsFastScrollEnabled = enabled;
-		if (mIsFastScrollEnabled) {
-			// if (mScroller == null)
-			// mScroller = new IndexScroller(getContext(),
-			// this,mAttrs,mDefStyle);
-		} else {
-			if (mScroller != null) {
-				mScroller.hide();
-				mScroller = null;
-			}
+		if (mScroller != null) {
+			mScroller.hide();
+			mScroller = null;
 		}
 	}
 
 	@Override
 	public void draw(Canvas canvas) {
 		super.draw(canvas);
-
 		// Overlay index bar
 		if (mScroller != null)
 			mScroller.draw(canvas);
@@ -131,14 +121,20 @@ public class IndexableListView extends ListView {
 	 *            in dp
 	 */
 	public void setIndexbarWidth(float indexbarWidth) {
-		this.mIndexbarWidth = indexbarWidth * mDensity;
+		if (mScroller != null) {
+			mScroller.setIndexbarWidth(indexbarWidth);
+		}
 	}
 
 	/**
 	 * @return the index bar margin
 	 */
 	public float getIndexbarMargin() {
-		return mIndexbarMargin;
+		if (mScroller != null) {
+			return mScroller.getIndexbarMargin();
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -148,14 +144,20 @@ public class IndexableListView extends ListView {
 	 *            in dp
 	 */
 	public void setIndexbarMargin(float indexbarMargin) {
-		this.mIndexbarMargin = indexbarMargin * mDensity;
+		if (mScroller != null) {
+			mScroller.setIndexbarMargin(indexbarMargin);
+		}
 	}
 
 	/**
 	 * @return index bar text color
 	 */
 	public int getIndexbarTextColor() {
-		return mIndexbarTextColor;
+		if (mScroller != null) {
+			return mScroller.getIndexbarTextColor();
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -164,14 +166,21 @@ public class IndexableListView extends ListView {
 	 * @param indexbarTextColor
 	 */
 	public void setIndexbarTextColor(int indexbarTextColor) {
-		this.mIndexbarTextColor = indexbarTextColor;
+		// this.mIndexbarTextColor = indexbarTextColor;
+		if (mScroller != null) {
+			mScroller.setIndexbarTextColor(indexbarTextColor);
+		}
 	}
 
 	/**
 	 * @return the index bar background color
 	 */
 	public int getIndexbarBgColor() {
-		return mIndexbarBgColor;
+		if (mScroller != null) {
+			return mScroller.getIndexbarBgColor();
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -180,14 +189,20 @@ public class IndexableListView extends ListView {
 	 * @param indexbarBgColor
 	 */
 	public void setIndexbarBgColor(int indexbarBgColor) {
-		this.mIndexbarBgColor = indexbarBgColor;
+		if (mScroller != null) {
+			mScroller.setIndexbarBgColor(indexbarBgColor);
+		}
 	}
 
 	/**
 	 * @return index bar user high lighted text color
 	 */
 	public int getIndexbarSelectedTextColor() {
-		return mIndexbarSelectedTextColor;
+		if (mScroller != null) {
+			return mScroller.getIndexbarSelectedTextColor();
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -196,7 +211,9 @@ public class IndexableListView extends ListView {
 	 * @param indexbarSelectedTextColor
 	 */
 	public void setIndexbarSelectedTextColor(int indexbarSelectedTextColor) {
-		this.mIndexbarSelectedTextColor = indexbarSelectedTextColor;
+		if (mScroller != null) {
+			mScroller.setIndexbarSelectedTextColor(indexbarSelectedTextColor);
+		}
 	}
 
 	@Override
